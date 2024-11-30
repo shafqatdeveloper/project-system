@@ -5,10 +5,10 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import UserAvatar from "../../components/chat/UserAvatar";
 import { useLocation } from "react-router-dom";
+import axiosInstance from "../../services/userServices";
 
 const LiveChat = () => {
   const [chattingWith, setChattingWith] = useState(dummyUsers[0]);
- 
 
   return (
     <Container

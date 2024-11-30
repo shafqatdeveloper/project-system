@@ -45,7 +45,11 @@ const CountrySelectInput = ({
             width={adaptStyle?.iconSize ?? 40}
             style={{ borderRadius: "50%" }}
           />
-          <small className="f-5 text-white">{country?.name}</small>
+          <small className="f-5 text-white">
+            {country?.name === "Taiwan, Province of China"
+              ? "Taiwan"
+              : country?.name}
+          </small>
         </div>
       );
     else return "";
@@ -66,7 +70,7 @@ const CountrySelectInput = ({
             placeholder={"Search here"}
             style={{ borderRadius: 0 }}
             setValue={(v) => handleSearch(v)}
-            className={'bg-transparent'}
+            className={"bg-transparent"}
           />
           <div
             className=""

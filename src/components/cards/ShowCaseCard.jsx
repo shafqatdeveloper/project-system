@@ -6,7 +6,7 @@ import { IoAddCircleOutline } from "react-icons/io5";
 import dummyShowCase from "../../assets/dummy-showcase.jpg";
 import dummyLogoImg from "../../assets/this-user.png";
 import { Link } from "react-router-dom";
-import { FaCaretDown, FaCaretUp } from "react-icons/fa";
+// import { FaCaretDown, FaCaretUp } from "react-icons/fa";
 import StandardSlider from "../sliders/StandardSlider";
 import { FaCaretLeft, FaCaretRight } from "react-icons/fa6";
 
@@ -26,10 +26,8 @@ const ShowCaseCard = ({
   const scrollableRef = useRef();
   const [activeIndex, setActiveIndex] = useState(0);
   const [animating, setAnimating] = useState(false);
-  const [items, setItems] = useState(item?.items);
-  const [type,setType]=useState(item?.type);
-
-
+  const [items, setItems] = useState(item?.files);
+  const [title, setTitle] = useState(item?.title);
 
   const next = () => {
     if (animating) return;
@@ -42,7 +40,8 @@ const ShowCaseCard = ({
     const nextIndex = activeIndex === 0 ? items.length - 1 : activeIndex - 1;
     setActiveIndex(nextIndex);
   };
-  //
+
+  console.log(items);
 
   return (
     <Card className="top-pick-card   d-flex flex-column justify-content-between ">
@@ -113,7 +112,7 @@ const ShowCaseCard = ({
                 >
                   {i?.type === "image" ? (
                     <img
-                      src={i?.src}
+                      src={i?.url}
                       height={200}
                       style={{ borderRadius: "10px" }}
                       className="full-width object-fit-contain"
@@ -140,7 +139,7 @@ const ShowCaseCard = ({
         <>
           <Button
             onClick={() => previous()}
-            style={{ height: "30px", width: "30px", bottom: "80px",left:5 }}
+            style={{ height: "30px", width: "30px", bottom: "80px", left: 5 }}
             className="grey-btn-3  p-0 full-rounded position-absolute "
           >
             <FaCaretLeft size={25} />
@@ -159,13 +158,14 @@ const ShowCaseCard = ({
         className="border-none bg-transparent full-width p-2 d-flex justify-content-between align-items-center"
       >
         <br></br>
-        <Input 
-        value={type}
-        onChange={(e)=>setType(e?.target?.value)}
-        style={{fontSize:'.875em'}} 
-        className={`d-block bg-transparent ${isinEditMode?"color-cyan":"color-half-white"} text-center`}>
-          
-        </Input>
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e?.target?.value)}
+          style={{ fontSize: ".875em" }}
+          className={`d-block bg-transparent ${
+            isinEditMode ? "color-cyan" : "color-half-white"
+          } text-center`}
+        ></Input>
         <IoAddCircleOutline
           onClick={() => toggleTemplatesModal()}
           className="cursor-pointer hover-color-cyan"

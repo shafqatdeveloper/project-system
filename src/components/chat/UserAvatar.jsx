@@ -1,4 +1,4 @@
-const UserAvatar = ({ src, height, width, className, isOnline,style }) => {
+const UserAvatar = ({ src, height, width, className, isOnline, style }) => {
   return (
     <div className="position-relative" style={{ height: height, width: width }}>
       <img

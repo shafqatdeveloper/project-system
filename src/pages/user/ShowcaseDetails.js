@@ -7,9 +7,13 @@ import { RxCross2 } from "react-icons/rx";
 import { useLocation, useNavigate } from "react-router-dom";
 import StandardSlider from "../../components/sliders/StandardSlider";
 import { FaCaretLeft, FaCaretRight } from "react-icons/fa6";
+import { useParams } from "react-router-dom";
+import axiosInstance from "../../services/userServices";
 
 const ShowcaseDetails = () => {
-  const { state,pathname } = useLocation();
+  const { state, pathname } = useLocation();
+
+  const { sId } = useParams();
 
   const [currentSlide, setCurrentSlide] = useState(1);
   const [isAddedToFavourite, setisAddedToFavourite] = useState(false);
@@ -19,14 +23,13 @@ const ShowcaseDetails = () => {
   const navigateTo = useNavigate();
 
   //slider props
-  const [items, setItems] = useState(state?.items??[]);
+  const [items, setItems] = useState(state?.items ?? []);
   const [activeIndex, setActiveIndex] = useState(0);
   const [animating, setAnimating] = useState(false);
 
-
-useEffect(()=>{
-  setItems(state?.items??[])
-},[pathname])
+  useEffect(() => {
+    setItems(state?.items ?? []);
+  }, [pathname]);
 
   const next = () => {
     if (animating) return;
@@ -51,27 +54,78 @@ useEffect(()=>{
     } else toast.error("List name cannot be empty");
   };
 
-  const handleFileUpload = (file) => {
+  const handleFileUpload = async (file) => {
     if (!file) {
       toast("You choosed nothing for upload");
     } else {
+      const fid = getActiveFileId();
+      const formdata = new FormData();
+      formdata.append("file", file);
       if (file?.type?.includes("image")) {
-        toast(`Uploading image to ${operationType} `);
+        toast(`Uploading image`);
         if (operationType === "add") {
-          setItems([...items, { type: "image", src: file }]);
+          try {
+            const response = await axiosInstance.post(
+              `/api/showcase/${sId}`,
+              formdata
+            );
+            if (response.status === 200) {
+              toast.success("File Uploaded successfully.");
+              navigateTo("/profile/settings?goTo=1");
+            }
+          } catch (error) {
+            const errorMessage =
+              error?.response?.data?.message || "An error occurred";
+            toast.error(errorMessage);
+          }
         } else {
-          let array = [...items];
-          array[activeIndex] = { type: "image", src: file };
-          setItems(array);
+          try {
+            const response = await axiosInstance.post(
+              `/api/showcase/filedata/${fid}/change`,
+              formdata
+            );
+            if (response.status === 200) {
+              toast.success("Image Updated successfully.");
+              navigateTo("/profile/settings?goTo=1");
+            }
+          } catch (error) {
+            const errorMessage =
+              error?.response?.data?.message || "An error occurred";
+            toast.error(errorMessage);
+          }
         }
       } else {
-        toast(`Uploading video to ${operationType}`);
+        toast(`Uploading video`);
         if (operationType === "add") {
-          setItems([...items, { type: "video", src: file }]);
+          try {
+            const response = await axiosInstance.post(
+              `/api/showcase/${sId}`,
+              formdata
+            );
+            if (response.status === 200) {
+              toast.success("File Uploaded successfully.");
+              navigateTo("/profile/settings?goTo=1");
+            }
+          } catch (error) {
+            const errorMessage =
+              error?.response?.data?.message || "An error occurred";
+            toast.error(errorMessage);
+          }
         } else {
-          let array = [...items];
-          array[activeIndex] = { type: "video", src: file };
-          setItems(array);
+          try {
+            const response = await axiosInstance.post(
+              `/api/showcase/filedata/${fid}/change`,
+              formdata
+            );
+            if (response.status === 200) {
+              toast.success("Video Updated successfully.");
+              navigateTo("/profile/settings?goTo=1");
+            }
+          } catch (error) {
+            const errorMessage =
+              error?.response?.data?.message || "An error occurred";
+            toast.error(errorMessage);
+          }
         }
       }
     }
@@ -84,6 +138,10 @@ useEffect(()=>{
     if (activeIndex > 0) {
       setActiveIndex((prev) => prev - 1);
     } else setActiveIndex(0);
+  };
+
+  const getActiveFileId = () => {
+    return items[activeIndex]?.fid;
   };
 
   return (

@@ -25,6 +25,7 @@ import axios from "axios";
 const PersonalizationLoggedIn = ({}) => {
   const [animation, setAnimation] = useState("");
   const [flowAt, setFlowAt] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const navigateTo = useNavigate();
 
   //get language and country from navigator
@@ -45,13 +46,51 @@ const PersonalizationLoggedIn = ({}) => {
     address: {
       country: "",
       state: "",
+      city: "",
+      zipCode: "",
+      address: "",
     },
     idNumber: "",
     jobTitle: "",
     industry: "",
   });
-  console.log(personalinformation);
-  const fetchPersonalInfo = async () => {
+
+  // Fetch Person Profile Data
+  const fetchPersonProfile = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await axiosInstance.get(`/api/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const profile = response?.data?.personProfile;
+      setPersonalInformation((prev) => ({
+        ...prev,
+        dob: profile?.birthDate?.substring(0, 10) || prev.dob,
+        currency: profile?.currency || prev.currency,
+        language: profile?.language || getDefaultLanguage(),
+        phone: profile?.phone || prev.phone,
+        legalFullName: profile?.legalFullName || prev.legalFullName,
+        address: {
+          address: profile?.address || prev.address.address,
+          city: profile?.city || prev.address?.city,
+          country: profile?.country || prev.address?.country,
+          state: profile?.state || prev.address?.state,
+          zipCode: profile?.zipCode || prev.address?.zipCode,
+        },
+        idNumber: profile?.idNumber || prev.idNumber,
+        jobTitle: profile?.jobTitle || prev.jobTitle,
+        industry: profile?.industry || prev.industry,
+      }));
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message || "An error occurred";
+      toast.error(errorMessage);
+    }
+  };
+  // fetch Business Profile Data
+  const fetchBusinessProfile = async () => {
     try {
       const token = localStorage.getItem("authToken");
       const response = await axiosInstance.get(`/api/profile`, {
@@ -85,17 +124,17 @@ const PersonalizationLoggedIn = ({}) => {
     }
   };
   useEffect(() => {
-    fetchPersonalInfo();
+    fetchPersonProfile();
   }, []);
-
+  // Update Personal Information
   const updateInformationHandler = async (e) => {
-    const updateData = {
+    const updatedPersonProfileData = {
       legalFullName: personalinformation?.legalFullName,
       idNumber: personalinformation?.idNumber,
       birthDate: personalinformation?.dob,
       jobTitle: personalinformation?.jobTitle,
       industry: personalinformation?.industry,
-      phone: personalinformation?.phoneNumber,
+      phone: personalinformation?.phone,
       currency: personalinformation?.currency,
       language: personalinformation?.language,
       country: personalinformation?.address?.country,
@@ -104,23 +143,43 @@ const PersonalizationLoggedIn = ({}) => {
       address: personalinformation?.address?.address,
       city: personalinformation?.address?.city,
     };
+    const updatedBusinessProfileData = {};
     e.preventDefault();
+    setIsLoading(true);
     try {
       const token = localStorage.getItem("authToken");
-      const response = await axiosInstance.put(
-        `/api/profile/person`,
-        updateData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      if (flowAt === 0) {
+        const response = await axiosInstance.put(
+          `/api/profile/personal`,
+          updatedPersonProfileData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.status === 200) {
+          toast.success(response?.data?.message);
+          fetchPersonProfile();
+        } else {
+          toast.error(response?.data?.message);
         }
-      );
-      if (response.status === 200) {
-        toast.success(response?.data?.message);
-        fetchPersonalInfo();
-      } else {
-        toast.error(response?.data?.message);
+      } else if (flowAt === 1) {
+        const response = await axiosInstance.put(
+          `/api/profile/business`,
+          updatedBusinessProfileData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.status === 200) {
+          toast.success(response?.data?.message);
+          fetchBusinessProfile();
+        } else {
+          toast.error(response?.data?.message);
+        }
       }
     } catch (error) {
       const errorMessage =
@@ -129,6 +188,8 @@ const PersonalizationLoggedIn = ({}) => {
         error.message ||
         "An unexpected error occurred. Please try again.";
       toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -198,7 +259,7 @@ const PersonalizationLoggedIn = ({}) => {
               onClick={(e) => updateInformationHandler(e)}
               className="btn d-flex py-3 align-items-center justify-content-center cyan-btn full-width "
             >
-              OK
+              {isLoading ? <Spinner size={"sm"} /> : " OK"}
             </Button>
           </CardBody>
         </Card>

@@ -139,10 +139,10 @@ const OrderNowCard = ({ details, isEditable }) => {
             size="md"
             type="text"
             className="bg-transparent p-0 border-none text-center"
-            value={currentDetails?.title}
+            value={currentDetails?.name}
           />
         ) : (
-          currentDetails?.title
+          currentDetails?.name
         )}
       </CardFooter>
     </Card>

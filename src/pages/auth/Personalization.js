@@ -12,28 +12,27 @@ import {
 } from "reactstrap";
 import logo from "../../assets/logo.png";
 import NormalInput from "../../components/inputs/NormalInput";
-import { useState,useRef } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import NavigatorTab from "../../components/navigators/NavigatorTab";
 import PersonalInformation from "../../components/page-sections/PersonalInformation";
 import BusinessInformation from "../../components/page-sections/BusinessInformation";
-import {languageList} from "../../dummyData";
+import { languageList } from "../../dummyData";
 
-const Personalization = ({ onAuthSuccess }) => {
+const Personalization = () => {
   const [animation, setAnimation] = useState("");
   const [flowAt, setFlowAt] = useState(0);
   const navigateTo = useNavigate();
 
-//get language and country from navigator
-const getDefaultLanguage=()=>{
-  let navigatorLang=navigator.language;
-  let lang=languageList?.find((item)=>{
-    let criteria=`${item?.name?.toLowerCase()}-${item?.countryCode?.toLowerCase()}`;
-    return criteria?.includes(navigatorLang);
-  })
-  return lang?.name||'English';
-}
-
+  //get language and country from navigator
+  const getDefaultLanguage = () => {
+    let navigatorLang = navigator.language;
+    let lang = languageList?.find((item) => {
+      let criteria = `${item?.name?.toLowerCase()}-${item?.countryCode?.toLowerCase()}`;
+      return criteria?.includes(navigatorLang);
+    });
+    return lang?.name || "English";
+  };
 
   const [personalinformation, setPersonalInformation] = useState({
     dob: "",
@@ -110,7 +109,6 @@ const getDefaultLanguage=()=>{
             <Button
               disabled={checkDisabledCondition()}
               onClick={() => {
-                onAuthSuccess();
                 navigateTo("/");
               }}
               className="btn d-flex py-3 align-items-center justify-content-center cyan-btn full-width "

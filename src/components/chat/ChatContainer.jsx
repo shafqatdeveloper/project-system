@@ -5,13 +5,13 @@ import {
   ReplyIcon,
 } from "../../assets/designPickedIcons";
 import { RxCross2 } from "react-icons/rx";
-import { IoAddCircleOutline, IoAlarmOutline, IoCall } from "react-icons/io5";
+import { IoAlarmOutline } from "react-icons/io5";
 import { useEffect, useRef, useState } from "react";
 import ChatBubble from "./ChatBubble";
 import UserAvatar from "./UserAvatar";
 import Booking from "../inputs/Booking";
 import { IoIosAddCircleOutline } from "react-icons/io";
-import AddToFavourities from "../inputs/AddToFavourities";
+// import AddToFavourities from "../inputs/AddToFavourities";
 import OrderNowCard from "../cards/OrderNowCard";
 import { Link } from "react-router-dom";
 import OrderTemplateModal from "./OrderTemplateModal";
@@ -20,6 +20,9 @@ import CallBubble from "./CallBubble";
 import moment from "moment";
 import { PiCaretDown } from "react-icons/pi";
 import { toast } from "react-toastify";
+import dummyPtofilePhoto from "../../assets/vercena.jpg";
+import axiosInstance from "../../services/userServices";
+import useWebSocket from "../../services/WebSocket";
 
 const ChatContainer = ({ chattingWith, setChattingWith, setisChatting }) => {
   const [bookModalOpen, setBookModalOpen] = useState(false);
@@ -32,49 +35,16 @@ const ChatContainer = ({ chattingWith, setChattingWith, setisChatting }) => {
     index: 0,
     type: "call",
   });
+  const [messages, setMessages] = useState([]);
 
-  const [messages, setMessages] = useState([
-    { from: chattingWith?.id, text: "Hello there !", date: Date.now(), id: 0 },
-    {
-      from: chattingWith?.id,
-      text: "I have something to discuss",
-      date: Date.now(),
-      id: 1,
-    },
-    { from: "", text: "Hello there !", date: Date.now(), id: 2 },
-    {
-      from: "",
-      text: "Before you discuss ! i have to discuss something ",
-      date: Date.now(),
-      id: 6,
-      repliedTo: 1,
-    },
-
-    {
-      from: "",
-      text: "I have something to discuss",
-      date: Date.now(),
-      id: 3,
-    },
-    {
-      from: chattingWith?.id,
-      link: "/profile/settings?goTo=3",
-      templateName: "interior Design",
-      date: Date.now(),
-      id: 4,
-    },
-    {
-      from: chattingWith?.id,
-      date: Date.now(),
-      id: 5,
-      text: "Try replying to this message for that double line error , it should work as expected , and bla bla bla bla blka blas ablas",
-    },
-  ]);
+  const senderId = localStorage.getItem("userId");
+  const token = localStorage.getItem("authToken");
+  const receipientId = chattingWith?.uid;
 
   const [newMessage, setNewMessage] = useState("");
   const chatBodyRef = useRef();
   const [replyingTo, setReplyingTo] = useState(null);
-  const [isAtBottom, setisAtBottom] = useState(false);
+  const [isAtBottom, setisAtBottom] = useState(true);
 
   //focusing the element on replying
   const inputElement = document.getElementById("message");
@@ -84,20 +54,6 @@ const ChatContainer = ({ chattingWith, setChattingWith, setisChatting }) => {
     }
   }, [replyingTo]);
   //
-
-  const handleSendMessage = () => {
-    let obj = {
-      text: newMessage,
-      date: Date.now(),
-      id: `message-${Math.floor(Math.random() * 1000)?.toString(16)}`,
-      repliedTo: replyingTo?.id,
-    };
-    setMessages([...messages, obj]);
-    setNewMessage("");
-    if (replyingTo) {
-      setReplyingTo(null);
-    }
-  };
 
   const getRepliedTo = (id) => {
     return [...messages]?.find((item) => item?.id === id);
@@ -120,6 +76,50 @@ const ChatContainer = ({ chattingWith, setChattingWith, setisChatting }) => {
     } else setisAtBottom(true);
   };
 
+  const [sent, setSent] = useState(false);
+
+  const sendMessage = useWebSocket(
+    "http://casedeep.com:8080/ws",
+    senderId,
+    receipientId,
+    (message) => {
+      console.log("MEssage", message);
+    }
+  );
+
+  const handleSendMessage = () => {
+    const message = {
+      type: "chat_message",
+      data: {
+        senderId: senderId,
+        receiverId: String(receipientId),
+        content: newMessage,
+      },
+    };
+    sendMessage("/app/chat/message", message);
+    setSent(!sent);
+  };
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/chat/messages/${senderId}/${receipientId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setMessages(response?.data);
+      } catch (error) {
+        const errorMessage =
+          error?.response?.data?.message || "An error occurred";
+        toast.error(errorMessage);
+      }
+    };
+    fetchMessages();
+  }, [chattingWith, sent]);
   return (
     <>
       <div className="chat-container ">
@@ -130,10 +130,10 @@ const ChatContainer = ({ chattingWith, setChattingWith, setisChatting }) => {
           >
             <div className="d-flex">
               <UserAvatar
-                isOnline={chattingWith?.isOnline}
+                isOnline={chattingWith?.status}
                 height={50}
                 width={50}
-                src={chattingWith?.photo}
+                src={dummyPtofilePhoto}
                 style={{ margin: "2px" }}
               />
               <MessageOptionIcon
@@ -147,7 +147,7 @@ const ChatContainer = ({ chattingWith, setChattingWith, setisChatting }) => {
             </div>
             <div>
               <h4 className="color-7777 text-center m-0">
-                {chattingWith?.name}
+                {chattingWith?.username}
               </h4>
               <p className="m-0 color-7777 text-center ">
                 {chattingWith?.designation ?? "Designer"}
@@ -172,79 +172,89 @@ const ChatContainer = ({ chattingWith, setChattingWith, setisChatting }) => {
           <small className="f-4 d-block color-7777 text-end">
             {moment(new Date())?.subtract(1, "day")?.format("YYYY/MM/D ddd")}
           </small>
-          {messages?.map((messageObj, key) => {
-            if (messageObj?.templateName) {
-              return (
-                <div
-                  className={`d-flex full-width  align-items-center ${
-                    chattingWith?.id === messageObj?.from
-                      ? "justify-content-start"
-                      : "justify-content-end"
-                  }`}
-                >
-                  <Link
-                    to={messageObj?.link}
-                    className="text-decoration-none template"
+          {messages?.length > 0 ? (
+            messages?.map((messageObj, key) => {
+              if (messageObj?.templateName) {
+                return (
+                  <div
+                    className={`d-flex full-width  align-items-center ${
+                      chattingWith?.id === messageObj?.from
+                        ? "justify-content-start"
+                        : "justify-content-end"
+                    }`}
                   >
-                    <OrderNowCard
-                      details={{ title: messageObj?.templateName }}
-                      isEditable={false}
+                    <Link
+                      to={messageObj?.link}
+                      className="text-decoration-none template"
+                    >
+                      <OrderNowCard
+                        details={{ title: messageObj?.templateName }}
+                        isEditable={false}
+                      />
+                    </Link>
+                  </div>
+                );
+              } else if (messageObj?.type === "call") {
+                return (
+                  <div
+                    className={`d-flex full-width  align-items-center ${
+                      chattingWith?.id === messageObj?.from
+                        ? "justify-content-start"
+                        : "justify-content-end"
+                    }`}
+                  >
+                    <CallBubble
+                      onReply={() =>
+                        setReplyingTo({
+                          ...messageObj,
+                          repliedTo: messageObj?.id,
+                          text: "You were in a call ",
+                        })
+                      }
+                      state={messageObj?.state}
+                      timeOfCall={messageObj?.timeOfCall}
+                      type={
+                        messageObj?.from === chattingWith?.id
+                          ? "recieved"
+                          : "sent"
+                      }
                     />
-                  </Link>
-                </div>
-              );
-            } else if (messageObj?.type === "call") {
-              return (
-                <div
-                  className={`d-flex full-width  align-items-center ${
-                    chattingWith?.id === messageObj?.from
-                      ? "justify-content-start"
-                      : "justify-content-end"
-                  }`}
-                >
-                  <CallBubble
-                    onReply={() =>
-                      setReplyingTo({
-                        ...messageObj,
-                        repliedTo: messageObj?.id,
-                        text: "You were in a call ",
-                      })
-                    }
-                    state={messageObj?.state}
-                    timeOfCall={messageObj?.timeOfCall}
-                    type={
-                      messageObj?.from === chattingWith?.id
-                        ? "recieved"
-                        : "sent"
-                    }
-                  />
-                </div>
-              );
-            } else
-              return (
-                <div
-                  className={`d-flex  full-width align-items-center ${
-                    chattingWith?.id === messageObj?.from
-                      ? "justify-content-start"
-                      : "justify-content-end"
-                  }`}
-                >
-                  <ChatBubble
-                    repliedTo={getRepliedTo(messageObj?.repliedTo)}
-                    onReply={() => setReplyingTo(messageObj)}
-                    messageObj={messageObj}
-                    type={
-                      messageObj?.from === chattingWith?.id
-                        ? "recieved"
-                        : "sent"
-                    }
-                    key={key}
-                    chatter={{ name: "You" }}
-                    chattingWith={chattingWith}
-                  />
-                </div>
-              );
-          })}
+                  </div>
+                );
+              } else
+                return (
+                  <div
+                    className={`d-flex  full-width align-items-center ${
+                      String(chattingWith?.uid) ===
+                      parseInt(messageObj?.receiverId)
+                        ? "justify-content-start"
+                        : "justify-content-end"
+                    }`}
+                  >
+                    <ChatBubble
+                      repliedTo={getRepliedTo(messageObj?.senderId)}
+                      onReply={() => setReplyingTo(messageObj)}
+                      messageObj={messageObj}
+                      type={
+                        parseInt(messageObj?.senderId) === receipientId
+                          ? "recieved"
+                          : "sent"
+                      }
+                      key={key}
+                      chatter={{ name: "You" }}
+                      chattingWith={chattingWith}
+                    />
+                  </div>
+                );
+            })
+          ) : (
+            <div
+              className="text-center color-7777 py-4 justify-content-center"
+              style={{ fontStyle: "italic", fontSize: "16px" }}
+            >
+              No Messages Yet
+            </div>
+          )}
         </div>
         <div className=" chat-container-input d-flex  position-relative">
           {isAtBottom ? (

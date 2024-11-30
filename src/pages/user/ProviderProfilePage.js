@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Button, Col, Row } from "reactstrap";
+import { useEffect, useState, useRef } from "react";
+import { Button, Col, Row, Spinner } from "reactstrap";
 import { providerProfileOptions } from "../../dummyData";
 import ProfileSettings from "../../components/page-sections/ProfileSettings";
 import UserProfileHeader from "../../components/globals/UserProfileHeader";
@@ -7,12 +7,11 @@ import ProfileShowCase from "../../components/page-sections/ProfileShowCase";
 import ProfilePricing from "../../components/page-sections/ProfilePricing";
 import ProfileOrderNow from "../../components/page-sections/ProfileOrderNow";
 import {
-  Link,
-  useLocation,
-  useParams,
+  // Link,
+  // useLocation,
+  // useParams,
   useSearchParams,
 } from "react-router-dom";
-import { toast } from "react-toastify";
 import TextEditIcon from "../../assets/modifiedIcons/TextEditIcon";
 import ImageEditIcon from "../../assets/modifiedIcons/ImageEditIcon";
 import VideoEditIcon from "../../assets/modifiedIcons/VideoEditIcon";
@@ -25,11 +24,18 @@ const ProviderProfilePage = ({ onLogout }) => {
   const [searchParams] = useSearchParams();
   const [flowAt, setFlowAt] = useState(Number(searchParams.get("goTo")) ?? 0);
   const [querry, setQuerry] = useState(window.innerWidth);
+  const profileSettingRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const renderComponent = () => {
     switch (flowAt) {
       case 0:
-        return <ProfileSettings />;
+        return (
+          <ProfileSettings
+            ref={profileSettingRef}
+            setIsLoading={setIsLoading}
+          />
+        );
       case 1:
         return <ProfileShowCase />;
       case 2:
@@ -44,6 +50,12 @@ const ProviderProfilePage = ({ onLogout }) => {
       setQuerry(window.innerWidth);
     });
   }, []);
+
+  const handleSaveProfileSettings = () => {
+    if (profileSettingRef.current) {
+      profileSettingRef.current.save();
+    }
+  };
 
   return (
     <div>
@@ -75,10 +87,11 @@ const ProviderProfilePage = ({ onLogout }) => {
             >
               <Col md={3} className="d-flex align-items-center gap-2">
                 <Button
+                  onClick={handleSaveProfileSettings}
                   style={{ borderRadius: "10px", width: "120px" }}
                   className="bg-gradient-cyan border-none f-6 text-black "
                 >
-                  Save
+                  {isLoading ? <Spinner size={"sm"} /> : "Save"}
                 </Button>
                 <Button
                   style={{ borderRadius: "10px", width: "120px" }}

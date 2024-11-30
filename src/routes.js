@@ -7,7 +7,7 @@ import SelectUserType from "./pages/auth/SelectUserType";
 import SetupUserName from "./pages/auth/SetupUserName";
 import Signup from "./pages/auth/Signup";
 import BookingList from "./pages/user/BookingList";
-import LiveChat from "./pages/user/LiveChat";
+// import LiveChat from "./pages/user/LiveChat";
 import Orders from "./pages/user/Orders";
 import PersonalizationLoggedIn from "./pages/user/PersonalizationLoggedIn";
 import ProfileOptions from "./pages/user/ProfileOptions";
@@ -32,7 +32,7 @@ const routes = {
     { path: "/profile/settings", component: ProviderProfilePage },
     { path: "/booking-list", component: BookingList },
     { path: "/orders", component: Orders },
-    { path: "/showcase-details/:id", component: ShowcaseDetails },
+    { path: "/showcase-details/:sId", component: ShowcaseDetails },
   ],
 };
 

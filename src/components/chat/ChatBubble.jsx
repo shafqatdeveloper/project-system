@@ -101,7 +101,7 @@ const ChatBubble = ({
                 {repliedTo && ReplyCard}
 
                 <p ref={contentRef} className="f-5 m-0  full-width text-start">
-                  {formateText(messageObj?.text)}
+                  {formateText(messageObj?.content)}
                 </p>
               </Card>
               <small
@@ -110,7 +110,7 @@ const ChatBubble = ({
                 }}
                 className={`color-7777 d-block f-4`}
               >
-                {moment(messageObj?.date)?.format(`HH:mm`)}
+                {moment(messageObj?.timestamp)?.format(`HH:mm`)}
               </small>
             </>
           ) : (
@@ -121,13 +121,13 @@ const ChatBubble = ({
                 }}
                 className={`color-7777 d-block f-4`}
               >
-                {moment(messageObj?.date)?.format(`HH:mm`)}
+                {moment(messageObj?.timestamp)?.format(`HH:mm`)}
               </small>
               <Card className={`border-none chat-bubble ${type}`}>
                 {repliedTo && ReplyCard}
 
                 <p ref={contentRef} className="f-5 full-width m-0 text-start">
-                  {formateText(messageObj?.text)}
+                  {formateText(messageObj?.content)}
                 </p>
               </Card>
             </>

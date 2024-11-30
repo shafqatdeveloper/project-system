@@ -13,10 +13,10 @@ const PersonalInformation = ({
   setPersonalInformation,
 }) => {
   const [selectedIndustry, setSelectedIndustry] = useState(
-    personalinformation?.industry
+    personalinformation?.industry || "Select Industry"
   );
   useEffect(() => {
-    setSelectedIndustry(personalinformation?.industry);
+    setSelectedIndustry(personalinformation?.industry || "Select Industry");
   }, [personalinformation?.industry]);
 
   return (
@@ -69,7 +69,7 @@ const PersonalInformation = ({
             setPersonalInformation((prev) => ({ ...prev, industry: v }));
             setSelectedIndustry(v);
           }}
-          value={personalinformation?.industry}
+          value={selectedIndustry}
           searchAble={true}
           options={[
             "Industry-1",

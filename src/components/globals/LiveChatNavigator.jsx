@@ -1,19 +1,44 @@
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import dummyProfile from "../../assets/vercena.jpg";
 import liveChatBg from "../../assets/designPickedIcons/live-chat-icon.png";
 import { useEffect, useState } from "react";
-import { Button, Card, Container } from "reactstrap";
-import { dummyUsers } from "../../dummyData";
+import { Button, Container } from "reactstrap";
+// import { dummyUsers } from "../../dummyData";
 import ChatContainer from "../../components/chat/ChatContainer";
 import { toast } from "react-toastify";
 import UserAvatar from "../../components/chat/UserAvatar";
+import axiosInstance from "../../services/userServices";
+import dummyProfilePhoto from "../../assets/vercena.jpg";
 
 const LiveChatNavigator = () => {
   const [timeOut, setTimeOut] = useState(0);
   const [isChatting, setisChatting] = useState(false);
   var x = 0;
-  const [chattingWith, setChattingWith] = useState(dummyUsers[0]);
+  const [chattingWith, setChattingWith] = useState(null);
+  const [chatUsers, setChatUsers] = useState(null);
   const { pathname } = useLocation();
+
+  const token = localStorage.getItem("authToken");
+  const fetchUsers = async () => {
+    try {
+      const response = await axiosInstance.get(`/chat/chatuser/alluser`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setChatUsers(response?.data);
+      setChattingWith(response?.data?.[0]);
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message || "An error occurred";
+      toast.error(errorMessage);
+    }
+  };
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Chat Functionality
 
   useEffect(() => {
     let interval = setInterval(() => {
@@ -113,27 +138,28 @@ const LiveChatNavigator = () => {
             style={{ background: "#252525", borderRadius: "30px" }}
           >
             <div className="chat-sidebar">
-              {dummyUsers?.map((item, key) => (
-                <div
-                  onClick={() => setChattingWith(item)}
-                  key={key}
-                  className="d-flex chat-user flex-column cursor-pointer full-width align-items-center"
-               
-                >
-                  <UserAvatar
-                    height={50}
-                    width={50}
-                    src={item?.photo}
-                    isOnline={item?.isOnline}
-                  />
-                  <small
-                    className="d-block user-name color-7777 text-center"
-                    style={{ minHeight: "30px" }}
+              {chatUsers &&
+                chatUsers.length > 0 &&
+                chatUsers?.map((item, key) => (
+                  <div
+                    onClick={() => setChattingWith(item)}
+                    key={key}
+                    className="d-flex chat-user flex-column cursor-pointer full-width align-items-center"
                   >
-                    {item?.name}
-                  </small>
-                </div>
-              ))}
+                    <UserAvatar
+                      height={50}
+                      width={50}
+                      src={dummyProfilePhoto}
+                      isOnline={item?.status}
+                    />
+                    <small
+                      className="d-block user-name color-7777 text-center"
+                      style={{ minHeight: "30px" }}
+                    >
+                      {String(item?.username).split(/[@\s]+/)[0]}
+                    </small>
+                  </div>
+                ))}
             </div>
             <ChatContainer
               setisChatting={setisChatting}

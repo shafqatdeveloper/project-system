@@ -1,8 +1,15 @@
 import { Label } from "reactstrap";
 import { IoIosAddCircleOutline } from "react-icons/io";
-import { toast } from "react-toastify";
 
-const VideoUploadInput = ({ value, id, setValue }) => {
+const VideoUploadInput = ({ value, id, setValue, closeModal }) => {
+  const handleVideoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setValue(file);
+      closeModal();
+    }
+  };
+
   return (
     <>
       <Label
@@ -12,10 +19,16 @@ const VideoUploadInput = ({ value, id, setValue }) => {
       >
         <div className="color-half-white text-center">
           <IoIosAddCircleOutline className="mb-2" size={50} />
-          <small className="f-4 d-block ">Introduction Video</small>
+          <small className="f-4 d-block">Introduction Video</small>
         </div>
       </Label>
-      <input type="file" id={id} onChange={(e)=>toast("Under development")} className="d-none"/>
+      <input
+        type="file"
+        id={id}
+        accept="video/*"
+        onChange={handleVideoChange}
+        className="d-none"
+      />
     </>
   );
 };
